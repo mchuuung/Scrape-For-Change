@@ -5,7 +5,7 @@ import openpyxl
 
 # Read an Excel file into a pandas DataFrame
 df = pd.read_excel('cryptofundurls.xlsx', sheet_name='Sheet1')
-df['Last-Modified'] = np.nan  # Sets all rows as empty
+
 d = []
 d2 = []
 
@@ -27,6 +27,20 @@ print (df_new)
 # print(r.headers)
 
 
+
+
+
+
+
+
+
+
+# d = []
+# for p in game.players.passing():
+#     d.append({'Player': p, 'Team': p.team, 'Passer Rating':
+#         p.passer_rating()})
+#
+# pd.DataFrame(d)
 
 
 
