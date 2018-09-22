@@ -7,26 +7,26 @@ import openpyxl
 df = pd.read_excel('cryptofundurls.xlsx', sheet_name='Sheet1')
 df['Last-Modified'] = np.nan  # Sets all rows as empty
 d = []
+d2 = []
 
 
-for value in df['Website URL']:  # Obtain all values in website column
+for value in df['Website URL']:  # Obtain all url's in website column
     r = req.get(value) # Response object
     if 'Last-Modified' in r.headers: # Checks headers for string
+        url = value
+        # print(url) # url's where website has been last modified
         contents = r.headers['Last-Modified'] # Sets 'contents' as modified date
-        # print(contents)
-        d.append(contents)
-    # df2 = pd.DataFrame({'Last-Modified': d})
-    df['Last-Modified'] = pd.Series(d)
+        contents2 = url # url's where website has been last modified
+        d.append(contents) # list of modified dates
+        d2.append(contents2) # list of urls
+df2 = pd.DataFrame({'Website URL': d2, 'Last-Modified': d})  # df containing strings. needs website url
+# print(df2)
+# df['Last-Modified'] = pd.Series(d) # adds column based upon index that started at 0
+df_new = df.merge(df2, left_on='Website URL', right_on='Website URL', how='outer')  # requires both df to have website url
+print (df_new)
+# print(r.headers)
 
-print (df)
-        # print(type(contents)) # Type string
-        # print(type(r.headers)) # requests.structures.CaseInsensitiveDict
-# d = []
-# for p in game.players.passing():
-#     d.append({'Player': p, 'Team': p.team, 'Passer Rating':
-#         p.passer_rating()})
-#
-# pd.DataFrame(d)
+
 
 
 
