@@ -17,28 +17,92 @@ from functools import reduce
 class ParseFile:
 
     def __init__(self, file):
-        self.file = file
         self.header_dates = []
         self.header_url = []
         self.hash_values = []
+        self.hash_url = []
         self.last_modified_url = []
         self.current_date = []
+        self.file = file
+
+    def set_file(self, file):
+        """Sets file to be parsed"""
+        self.file = file
+        return self.set_file
 
     def get_file(self):
+        """Parses file that has been set"""
         df = pd.read_excel(self.file, sheet_name='Sheet') # Read an Excel file into a pandas DataFrame
-        for value in df['Website URL']:  # Obtain all url's in website column
-            r = req.get(value, verify=False)  # Response object. Value is set to url of website
+        for url in df['Website URL']:  # Obtain all url's in website column
+            r = req.get(url, verify=False)  # Response object. Value is set to url of website
             if 'Last-Modified' in r.headers:  # Checks headers for string
                 header_date = r.headers['Last-Modified']  # Sets 'header_date' as modified date
-                website_url = value  # url's where website has been last modified
+                website_url = url  # url's where website has been last modified
                 self.header_dates.append(header_date)  # list of modified dates
                 self.header_url.append(website_url)  # list of urls
-        return self.header_dates, self.header_url # correct values being returned
+            else:
+                    h = hashlib.sha512(r.text.encode('utf-8')) # hash the web page
+                    h = h.hexdigest()
+                    self.hash_values.append(h)
+                    self.hash_url.append(url)
+                    self.current_date.append(datetime.datetime.now())
+        # return self.hash_url, self.hash_values,self.current_date # correct values being returned
+        # return self.header_dates, self.header_url # correct values being returned
 
 
 def main():
     file = ParseFile("cryptofundurls_orig.xlsx")  # instantiate class instance
-    print(file.get_file())
+    print(file.get_file()) # Checks output
+    file.set_file("cryptofundurls.xlsx") # Checks a new file (use for comparision of hash)
+    print(file.get_file()) # Checks output
 
 
 main()
+
+#
+#     for value in df['Website URL']:  # Obtain all url's in website column
+#         r = req.get(value, verify=False)  # Response object. Value is set to url of website
+#         if 'Last-Modified' in r.headers:  # Checks headers for string
+#             contents = r.headers['Last-Modified']  # Sets 'contents' as modified date
+#             website_url = value  # url's where website has been last modified
+#             last_modified_dates.append(contents)  # list of modified dates
+#             last_modified_websites.append(website_url)  # list of urls
+#         else:
+#                 h = hashlib.sha512(r.text.encode('utf-8')) # hash the web page
+#                 h = h.hexdigest()
+#                 d4.append(h)
+#                 contents3 = value
+#                 d3.append(contents3)
+#                 d5.append(datetime.datetime.now())
+#
+#
+#
+#
+#     df4 = pd.DataFrame({'Fund Name': f_name, 'Website URL': d3, 'Last-Modified': d5})  # date of last modified and time
+#
+#
+#     #last_modified_df = pd.DataFrame({'Website URL': last_modified_websites, 'Last-Modified': last_modified_dates})  # df containing strings. needs website url
+#
+#     # merge df4 and last_mod_df
+#     #merge_df = df4.astype(str).merge(last_modified_df.astype(str), on=['Website URL'], how='outer', suffixes=('_', ''))
+#
+#     new_df = df.astype(str).merge(merge_df.astype(str), on=['Website URL'], how='outer', suffixes=('_', ''))
+#     # final_df = new_df.astype(str).merge(df4.astype(str), on=['Last-Modified','Website URL'], how='outer', suffixes=('_', ''))  # inplace=True. good
+#     print(df4)
+#     # print(df4)
+#     # print(last_modified_df)
+#     # print(new_df)# screenshot 2
+#
+#
+#     #  To convert a dataframe into a worksheet highlighting the header and index:
+#     # wb = Workbook()
+#     # ws = wb.active
+#     #
+#     # for r in dataframe_to_rows(final_df, index=True, header=True):
+#     #     ws.append(r)
+#     #
+#     # for cell in ws['A'] + ws[1]:
+#     #     cell.style = 'Pandas'
+#     #
+#     # wb.save("cryptofundurls.xlsx")
+#
