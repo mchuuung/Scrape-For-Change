@@ -1,0 +1,44 @@
+import hashlib
+import pandas as pd
+import requests as req
+import hashlib
+import numpy
+import random
+import datetime
+from openpyxl import Workbook
+from openpyxl.utils.dataframe import dataframe_to_rows
+import urllib.request
+from functools import reduce
+
+
+
+
+
+class ParseFile:
+
+    def __init__(self, file):
+        self.file = file
+        self.header_dates = []
+        self.header_url = []
+        self.hash_values = []
+        self.last_modified_url = []
+        self.current_date = []
+
+    def get_file(self):
+        df = pd.read_excel(self.file, sheet_name='Sheet') # Read an Excel file into a pandas DataFrame
+        for value in df['Website URL']:  # Obtain all url's in website column
+            r = req.get(value, verify=False)  # Response object. Value is set to url of website
+            if 'Last-Modified' in r.headers:  # Checks headers for string
+                header_date = r.headers['Last-Modified']  # Sets 'header_date' as modified date
+                website_url = value  # url's where website has been last modified
+                self.header_dates.append(header_date)  # list of modified dates
+                self.header_url.append(website_url)  # list of urls
+        return self.header_dates, self.header_url # correct values being returned
+
+
+def main():
+    file = ParseFile("cryptofundurls_orig.xlsx")  # instantiate class instance
+    print(file.get_file())
+
+
+main()
