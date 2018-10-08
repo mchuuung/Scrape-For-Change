@@ -1,17 +1,9 @@
-import hashlib
 import pandas as pd
 import requests as req
 import hashlib
-import numpy
-import random
 import datetime
 from openpyxl import Workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
-import urllib.request
-from functools import reduce
-
-
-
 
 
 class ParseFile:
@@ -27,7 +19,7 @@ class ParseFile:
         self.hash_df = pd.DataFrame
         self.header_df = pd.DataFrame
         self.merge_df = pd.DataFrame
-        self.final_df = pd.DataFrame
+        self.df = pd.DataFrame
 
     def set_file(self, file):
         """Sets file to be parsed"""
@@ -36,8 +28,8 @@ class ParseFile:
 
     def get_file(self):
         """Parses file that has been set"""
-        df = pd.read_excel(self.file) # Read an Excel file into a pandas DataFrame
-        for url in df['Website URL']:  # Obtain all url's in website column
+        self.df = pd.read_excel(self.file) # Read an Excel file into a pandas DataFrame
+        for url in self.df['Website URL']:  # Obtain all url's in website column
             r = req.get(url, verify=False)  # Response object. Value is set to url of website
             if 'Last-Modified' in r.headers:  # Checks headers for string
                 header_date = r.headers['Last-Modified']  # Sets 'header_date' as modified date
@@ -63,6 +55,11 @@ class ParseFile:
         self.merge_df = self.hash_df.astype(str).merge(self.header_df.astype(str), on=['Last-Modified', 'Website URL'], how='outer', suffixes=('_', ''))
         return self.merge_df
 
+    def combine_df2(self):
+        self.merge_df2 = self.df.astype(str).merge(self.merge_df.astype(str), on=[ 'Website URL'],how='left', suffixes=('_', ''))
+        self.merge_df2 = self.merge_df2.drop(columns=["Last-Modified_", "Hash-Value_"])
+        return self.merge_df2
+
     def save_wb(self):
             wb = Workbook()
             ws = wb.active
@@ -74,6 +71,19 @@ class ParseFile:
                 cell.style = 'Pandas'
 
             wb.save("check.xlsx")
+    def save_wb2(self):
+            wb = Workbook()
+            ws = wb.active
+
+            for r in dataframe_to_rows(self.merge_df2, index=True, header=True):
+                ws.append(r)
+
+            for cell in ws['A'] + ws[1]:
+                cell.style = 'Pandas'
+
+            wb.save("MasterFile.xlsx")
+
+
 
 def main():
     file = ParseFile("MasterFile.xlsx")  # instantiate class instance
@@ -82,6 +92,10 @@ def main():
     file.create_header_df()
     file.combine_df()
     file.save_wb()
+    file.set_file("check.xlsx")
+    file.combine_df2()
+    file.save_wb2()
+
 
     #file.save_wb()
     #file.set_file("cryptofundurls.xlsx") # Checks a new file (use for comparision of hash)
