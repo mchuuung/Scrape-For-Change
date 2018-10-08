@@ -34,7 +34,7 @@ class ParseFile:
 
     def set_df(self):
         self.current_df = pd.read_excel(self.file)
-
+ 
 
     def get_file(self):
         """Parses initial file. Sends http request to determine if 'Last-Modified' is given.
