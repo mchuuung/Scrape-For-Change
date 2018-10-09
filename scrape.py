@@ -26,6 +26,9 @@ class ParseFile:
         self.check_hash_date =[]
         self.checked_hash_df = pd.DataFrame
         self.current_df = pd.DataFrame
+        self.hold_list = []
+        self.check_hash_list = []
+        self.master_hash_list = []
 
     def set_file(self, file):
         """Sets file to be parsed"""
@@ -34,7 +37,7 @@ class ParseFile:
 
     def set_df(self):
         self.current_df = pd.read_excel(self.file)
- 
+
 
     def get_file(self):
         """Parses initial file. Sends http request to determine if 'Last-Modified' is given.
@@ -97,10 +100,23 @@ class ParseFile:
         self.hash_frame = pd.read_excel(self.file) # Read data into pandas DF
         for hash_val in self.hash_frame['Hash-Value']:  # Obtain all hashes in Hash-Value column
             if not hash_val != hash_val: # Where hash-value is given
-                print(hash_val)
+                if self.file == "check3.xlsx":
+                    self.check_hash_list.append(hash_val) # append all hash values
+                elif self.file == "MasterFile.xlsx":
+                    self.master_hash_list.append(hash_val)
+        return self.check_hash_list, self.master_hash_list
+        # Store lists and compare them to set conditions
+
+    def compare_list(self):
+        for i in self.check_hash_list:
+            for x in self.master_hash_list:
+                if i == x:
+                    print('match') # correct amount
+
+
         #         self.check_hash_against.append(hash_val)
         #         self.check_hash_date.append(datetime.datetime.now())
-        # 
+        #
         # self.checked_hash_df = pd.DataFrame({'Last-Modified': self.check_hash_date,"Hash-Value": self.check_hash_against})
         # return self.checked_hash_df
 
@@ -108,18 +124,21 @@ class ParseFile:
 
 def main():
     file = ParseFile("MasterFile.xlsx")  # instantiate class instance
-    file.get_file()
-    file.create_hash_df()
-    file.create_header_df()
-    file.combine_df()
-    # file.save_wb("check.xlsx", file.merge_df)
-    # file.set_file("check.xlsx")
-    file.combine_df2()
+    # file.get_file()
+    # file.create_hash_df()
+    # file.create_header_df()
+    # file.combine_df()
+    # file.combine_df2()
     # file.save_wb("check3.xlsx", file.merge_df2) # master unaffected till here
-    file.set_file("MasterFile.xlsx") # current working file
+    # file.set_file("MasterFile.xlsx") # current working file
+    file.set_file("check3.xlsx")
     file.check_hash() # Checks current hash value from MasterFile
-    file.merge_df3() # Merges checkfile with masterfile into official list
-    file.save_wb('OfficialList.xlsx', file.final_df)
+    file.set_file("MasterFile.xlsx")
+    file.check_hash()
+    file.compare_list()
+
+    # file.merge_df3() # Merges checkfile with masterfile into official list
+    # file.save_wb('OfficialList.xlsx', file.final_df)
 
 
 
