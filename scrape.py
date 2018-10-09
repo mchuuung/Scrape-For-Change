@@ -29,6 +29,8 @@ class ParseFile:
         self.hold_list = []
         self.check_hash_list = []
         self.master_hash_list = []
+        self.final_list = []
+        self.merge_final = pd.DataFrame
 
     def set_file(self, file):
         """Sets file to be parsed"""
@@ -74,11 +76,13 @@ class ParseFile:
         self.merge_df2 = self.merge_df2.drop(columns=["Last-Modified_", "Hash-Value_"])
         return self.merge_df2
 
-    def merge_df3(self):
-        self.final_df = self.merge_df2.astype(str).merge(self.checked_hash_df.astype(str), on='Hash-Value', how='left', suffixes=('_', ''))
-        self.final_df = self.final_df.drop(columns=["Last-Modified_"])
-        self.final_df = self.final_df.astype(str)
-        return self.final_df
+
+
+    def final_merge(self):
+        self.merge_final = self.merge_df2.astype(str).merge(self.checked_hash_df.astype(str), on='Hash-Value', how='left', suffixes=('_', ''))
+        # self.merge_final = self.merge_final.drop(columns=["Last-Modified_"])
+        self.merge_final = self.merge_final.astype(str)
+        return self.merge_final
 
     def save_wb(self, save_file, use_df):
             self.save_to_file = save_file
@@ -111,7 +115,9 @@ class ParseFile:
         for i in self.check_hash_list:
             for x in self.master_hash_list:
                 if i == x:
-                    print('match') # correct amount
+                    self.final_list.append(x)
+        self.checked_hash_df = pd.DataFrame({"Hash-Value": self.final_list})  # Matching hash values from both files
+        return self.checked_hash_df
 
 
         #         self.check_hash_against.append(hash_val)
@@ -124,18 +130,20 @@ class ParseFile:
 
 def main():
     file = ParseFile("MasterFile.xlsx")  # instantiate class instance
-    # file.get_file()
-    # file.create_hash_df()
-    # file.create_header_df()
-    # file.combine_df()
-    # file.combine_df2()
-    # file.save_wb("check3.xlsx", file.merge_df2) # master unaffected till here
-    # file.set_file("MasterFile.xlsx") # current working file
+    file.get_file()
+    file.create_hash_df()
+    file.create_header_df()
+    file.combine_df()
+    file.combine_df2()
+    file.save_wb("check3.xlsx", file.merge_df2) # master unaffected till here
+    file.set_file("MasterFile.xlsx") # current working file
     file.set_file("check3.xlsx")
     file.check_hash() # Checks current hash value from MasterFile
     file.set_file("MasterFile.xlsx")
     file.check_hash()
     file.compare_list()
+    file.final_merge()
+    file.save_wb('OfficialList.xlsx', file.merge_final)
 
     # file.merge_df3() # Merges checkfile with masterfile into official list
     # file.save_wb('OfficialList.xlsx', file.final_df)
@@ -147,5 +155,5 @@ def main():
     #file.set_file("cryptofundurls.xlsx") # Checks a new file (use for comparision of hash)
     #print(file.get_file()) # Checks output
 
-
+"""Add the last modified time for new appended hash values into officiali list and done."""
 main()
