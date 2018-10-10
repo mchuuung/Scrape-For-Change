@@ -34,6 +34,7 @@ class ParseFile:
         self.olddate_list = []
         self.check_hash_time = []
         self.master_hash_time = []
+        self.holdme = []
 
     def set_file(self, file):
         """Sets file to be parsed"""
@@ -45,6 +46,8 @@ class ParseFile:
 
 
     def get_file(self):
+        count = 0
+        count_not_same = 0
         """Parses initial file. Sends http request to determine if 'Last-Modified' is given.
         Appends 'Last-Modified' date if given, else sets current date and hash of website."""
         self.df = pd.read_excel(self.file) # Read an Excel file into a pandas DataFrame
@@ -56,15 +59,28 @@ class ParseFile:
                 self.header_dates.append(header_date)  # list of modified dates
                 self.header_url.append(website_url)  # list of urls
             else:
-                    h = hashlib.sha512(r.text.encode('utf-8')) # hash the web page
-                    h = h.hexdigest()
-                    self.hash_values.append(h)
-                    self.hash_url.append(url)
-                    self.current_date.append(datetime.datetime.now())
+                h = hashlib.sha512(r.text.encode('utf-8')) # hash the web page
+                h = h.hexdigest()
+                self.hash_values.append(h)
+                self.hash_url.append(url)
+
+        for y in self.df['Hash-Value']:
+            if y in self.hash_values:
+                count+=1
+
+            else:
+                count_not_same+=1
+                # self.current_date.append(datetime.datetime.now())
+        print(count)
+        print(count_not_same)
+
+
+
+        # print(count, self.current_date)
         return self.header_dates, self.header_url, self.hash_values, self.hash_url, self.current_date
 
     def create_hash_df(self):
-        self.hash_df = pd.DataFrame({'Website URL': self.hash_url, 'Last-Modified': self.current_date, "Hash-Value": self.hash_values})  # date of last modified and time
+        self.hash_df = pd.DataFrame({'Website URL': self.hash_url,  "Hash-Value": self.hash_values})  # date of last modified and time
         return self.hash_df
 
     def create_header_df(self):
@@ -76,11 +92,14 @@ class ParseFile:
         return self.merge_df
 
     def combine_df2(self):
-        self.merge_df2 = self.df.astype(str).merge(self.merge_df.astype(str), on=[ 'Website URL'],how='left', suffixes=('_', ''))
-        self.merge_df2 = self.merge_df2.drop(columns=["Last-Modified_", "Hash-Value_"])
+        self.merge_df2 = self.df.astype(str).merge(self.merge_df.astype(str), on=['Website URL'],how='left', suffixes=('_', ''))
+        self.merge_df2 = self.merge_df2.drop(columns=["Hash-Value_"])
+        #         self.merge_df2 = self.df.astype(str).merge(self.merge_df.astype(str), on=['Last-Modified', 'Website URL', 'Hash-Value'],how='left', suffixes=('_', '')) Returns copy of original
+        #         self.merge_df2 = self.df.astype(str).merge(self.merge_df.astype(str), on=['Last-Modified', 'Website URL', 'Hash-Value'],how='right', suffixes=('_', '')) Values of new merge without hjeader
         return self.merge_df2
 
-
+    # def create_original(self):
+    #     self.df = pd.read_excel(self.file)
 
     def final_merge(self):
         self.merge_final = self.merge_df2.astype(str).merge(self.checked_hash_df.astype(str), on=['Hash-Value', 'Last-Modified'], how='left', suffixes=('_', ''))
@@ -128,22 +147,26 @@ class ParseFile:
 
 def main():
     file = ParseFile("MasterFileTesting.xlsx")  # instantiate class instance
-    file.set_df()
-    file.save_wb('CheckV1.xlsx', file.current_df) # Store current master file
+    file.set_df() # Sets file as current DF
+    file.save_wb('CheckV1.xlsx', file.current_df) # Store current master file. unnecessary
     file.set_file("MasterFileTesting.xlsx")
     file.get_file()
-    file.create_hash_df()
-    file.create_header_df()
-    file.combine_df()
-    file.combine_df2()
-    file.save_wb("checkAgainst.xlsx", file.merge_df2) # master unaffected till here
-    file.set_file("checkAgainst.xlsx")
-    file.check_hash() # Checks current hash value from MasterFile
-    file.set_file("CheckV1.xlsx")
-    file.check_hash()
-    file.compare_list() #initial run will be empty
-    file.final_merge()
-    file.save_wb('MasterFileTesting.xlsx', file.merge_final)
+    # file.create_hash_df() # wrongfully overwriting date for same hash
+    # file.save_wb("checkHashDF.xlsx", file.hash_df)
+    # file.create_header_df() # correct values remaining
+    # file.save_wb("checkHeaderDF.xlsx", file.header_df)
+    # file.combine_df() # Used to obtain combine_df2
+    # file.save_wb("checkHash_HeaderDF.xlsx", file.merge_df) # should not overwrite previous date if hash unchanged
+    # file.combine_df2() # Issue in merge is here
+    # file.save_wb("checkOriginal.xlsx", file.df) # correct original output. unnecssary
+    # file.save_wb("checkAgainst.xlsx", file.merge_df2) # last mod date not staying the same even when hash values are same
+    # file.set_file("checkAgainst.xlsx")
+    # file.check_hash() # Checks current hash value from MasterFile
+    # file.set_file("CheckV1.xlsx")
+    # file.check_hash()
+    # file.compare_list() #initial run will be empty
+    # file.final_merge()
+    # file.save_wb('MasterFileTesting.xlsx', file.merge_final)
 
 
 """Taking the time from check3 and making it the official end time. not wanted"""
