@@ -95,7 +95,7 @@ class ParseFile:
         return self.hash_df
 
     def combine_df(self): # lexicographically
-        self.merge_df = self.df.astype(str).merge(self.hash_df.astype(str), on=['Hash-Value'],how='right', suffixes=('_', ''))
+        self.merge_df = self.df.astype(str).merge(self.hash_df.astype(str), on=['Hash-Value', 'Website URL'],how='right', suffixes=('_', ''))
         # self.merge_df = self.merge_df.drop(columns=["Last-Modified_"])
         return self.merge_df
 
@@ -158,7 +158,7 @@ def main():
     file.set_df() # Sets file as current DF
     file.initial_parse()
     file.create_hash_df() # wrongfully overwriting date for same hash
-    file.save_wb("checkHashDF.xlsx", file.hash_df)
+    # file.save_wb("checkHashDF.xlsx", file.hash_df)
     file.combine_df() # Used to obtain combine_df2
     file.save_wb("merge_hashMaster.xlsx", file.merge_df) # should not overwrite previous date if hash unchanged
     # file.concat_df()
